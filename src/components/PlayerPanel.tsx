@@ -1,6 +1,6 @@
 import { useEventListener } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 import { styles } from '../styles';
@@ -25,6 +25,91 @@ interface PlayerPanelProps {
   onTogglePlay: () => void;
 }
 
+interface SeekCommand {
+  id: number;
+  seconds: number;
+}
+
+interface VideoSurfaceProps {
+  media: MediaFile;
+  isPlaying: boolean;
+  playbackSpeed: number;
+  seekCommand: SeekCommand;
+  onPlaybackDuration: (duration: number) => void;
+  onPlaybackProgress: (currentTime: number, duration?: number) => void;
+  onPlaybackStateChange: (isPlaying: boolean) => void;
+}
+
+function VideoSurface({
+  isPlaying,
+  media,
+  onPlaybackDuration,
+  onPlaybackProgress,
+  onPlaybackStateChange,
+  playbackSpeed,
+  seekCommand,
+}: VideoSurfaceProps) {
+  const player = useVideoPlayer(
+    {
+      uri: media.uri,
+      metadata: {
+        title: media.name,
+        artist: media.location,
+      },
+    },
+    videoPlayer => {
+      videoPlayer.timeUpdateEventInterval = 0.25;
+      videoPlayer.playbackRate = playbackSpeed;
+    }
+  );
+
+  useEffect(() => {
+    player.playbackRate = playbackSpeed;
+  }, [player, playbackSpeed]);
+
+  useEffect(() => {
+    if (isPlaying) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [isPlaying, player]);
+
+  useEffect(() => {
+    if (seekCommand.id === 0) return;
+
+    player.seekBy(seekCommand.seconds);
+    onPlaybackProgress(player.currentTime, player.duration);
+  }, [onPlaybackProgress, player, seekCommand]);
+
+  useEventListener(player, 'timeUpdate', ({ currentTime }) => {
+    onPlaybackProgress(currentTime, player.duration);
+  });
+
+  useEventListener(player, 'sourceLoad', ({ duration }) => {
+    onPlaybackDuration(duration);
+  });
+
+  useEventListener(player, 'playingChange', ({ isPlaying: nextIsPlaying }) => {
+    onPlaybackStateChange(nextIsPlaying);
+  });
+
+  useEventListener(player, 'playToEnd', () => {
+    onPlaybackProgress(player.duration, player.duration);
+    onPlaybackStateChange(false);
+  });
+
+  return (
+    <VideoView
+      style={styles.videoSurface}
+      player={player}
+      contentFit="cover"
+      nativeControls={false}
+      fullscreenOptions={{ enable: true }}
+    />
+  );
+}
+
 export function PlayerPanel({
   activeMedia,
   featuredTitle,
@@ -43,67 +128,11 @@ export function PlayerPanel({
   watched,
 }: PlayerPanelProps) {
   const isVideo = mediaMode === 'video' && activeMedia.mediaType === 'video';
-  const videoSource = isVideo
-    ? {
-        uri: activeMedia.uri,
-        metadata: {
-          title: activeMedia.name,
-          artist: activeMedia.location,
-        },
-      }
-    : null;
-
-  const player = useVideoPlayer(videoSource, videoPlayer => {
-    videoPlayer.timeUpdateEventInterval = 0.25;
-    videoPlayer.playbackRate = playbackSpeed;
-  });
-
-  useEffect(() => {
-    player.playbackRate = playbackSpeed;
-  }, [player, playbackSpeed]);
-
-  useEffect(() => {
-    if (!isVideo) {
-      player.pause();
-      return;
-    }
-
-    if (isPlaying) {
-      player.play();
-    } else {
-      player.pause();
-    }
-  }, [isPlaying, isVideo, player]);
-
-  useEventListener(player, 'timeUpdate', ({ currentTime }) => {
-    if (isVideo) {
-      onPlaybackProgress(currentTime, player.duration);
-    }
-  });
-
-  useEventListener(player, 'sourceLoad', ({ duration }) => {
-    if (isVideo) {
-      onPlaybackDuration(duration);
-    }
-  });
-
-  useEventListener(player, 'playingChange', ({ isPlaying: nextIsPlaying }) => {
-    if (isVideo) {
-      onPlaybackStateChange(nextIsPlaying);
-    }
-  });
-
-  useEventListener(player, 'playToEnd', () => {
-    if (isVideo) {
-      onPlaybackProgress(player.duration, player.duration);
-      onPlaybackStateChange(false);
-    }
-  });
+  const [seekCommand, setSeekCommand] = useState<SeekCommand>({ id: 0, seconds: 0 });
 
   const handleSeekBy = (seconds: number) => {
     if (isVideo) {
-      player.seekBy(seconds);
-      onPlaybackProgress(player.currentTime, player.duration);
+      setSeekCommand(command => ({ id: command.id + 1, seconds }));
       return;
     }
 
@@ -115,12 +144,15 @@ export function PlayerPanel({
       <View style={styles.notch} />
       <View style={[styles.heroArt, mediaMode === 'audio' && styles.audioArt]}>
         {isVideo ? (
-          <VideoView
-            style={styles.videoSurface}
-            player={player}
-            contentFit="cover"
-            nativeControls={false}
-            fullscreenOptions={{ enable: true }}
+          <VideoSurface
+            key={activeMedia.id}
+            isPlaying={isPlaying}
+            media={activeMedia}
+            onPlaybackDuration={onPlaybackDuration}
+            onPlaybackProgress={onPlaybackProgress}
+            onPlaybackStateChange={onPlaybackStateChange}
+            playbackSpeed={playbackSpeed}
+            seekCommand={seekCommand}
           />
         ) : (
           <>
