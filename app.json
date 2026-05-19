@@ -13,9 +13,18 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "AuraPlay needs access to your media library to show and play videos from this phone.",
+        "NSAppleMusicUsageDescription": "AuraPlay needs access to your audio library to show music and audio files from this phone."
+      }
     },
     "android": {
+      "permissions": [
+        "READ_MEDIA_AUDIO",
+        "READ_MEDIA_VIDEO",
+        "READ_EXTERNAL_STORAGE"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
