@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
-import { styles } from '../styles';
+import { useThemeStyles } from '../theme';
 import { MediaFile } from '../types';
 
 interface MediaRowProps {
@@ -21,6 +21,7 @@ export function MediaRow({
   onPress,
   onToggleFavorite,
 }: MediaRowProps) {
+  const styles = useThemeStyles();
   const accent = item.mediaType === 'audio' ? '#5d94ff' : index % 2 ? '#3b66ff' : '#ff2f6d';
 
   return (

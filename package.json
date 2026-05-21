@@ -18,8 +18,10 @@
     "build:production:ios": "eas build --platform ios --profile production"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/slider": "^5.0.1",
     "expo": "~54.0.33",
+    "expo-audio": "~1.1.1",
     "expo-media-library": "~18.2.1",
     "expo-status-bar": "~3.0.9",
     "expo-video": "~3.0.16",

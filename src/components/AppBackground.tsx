@@ -1,9 +1,11 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
-import { styles } from '../styles';
+import { useThemeStyles } from '../theme';
 
 export function AppBackground() {
+  const styles = useThemeStyles();
+
   return (
     <View style={styles.background}>
       <View style={[styles.glow, styles.glowPink]} />

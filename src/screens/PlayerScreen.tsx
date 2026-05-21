@@ -4,7 +4,7 @@ import { Dimensions, Text, TouchableOpacity, View } from 'react-native';
 import { EmptyState } from '../components/EmptyState';
 import { MediaRow } from '../components/MediaRow';
 import { PlayerPanel } from '../components/PlayerPanel';
-import { styles } from '../styles';
+import { useThemeStyles } from '../theme';
 import { MediaFile, MediaMode, PlaybackProgress } from '../types';
 
 interface PlayerScreenProps {
@@ -26,7 +26,6 @@ interface PlayerScreenProps {
   onPlayVideo: (index: number) => void;
   onPrevious: () => void;
   onRefresh: () => void;
-  onSeekBy: (seconds: number) => void;
   onToggleFavorite: (id: string) => void;
   onTogglePlay: () => void;
 }
@@ -46,7 +45,6 @@ export function PlayerScreen({
   onPlaybackStateChange,
   onPrevious,
   onRefresh,
-  onSeekBy,
   onToggleFavorite,
   onTogglePlay,
   playbackSpeed,
@@ -54,6 +52,7 @@ export function PlayerScreen({
   visibleMedia,
   watched,
 }: PlayerScreenProps) {
+  const styles = useThemeStyles();
   const isCompact = Dimensions.get('window').width < 390;
 
   return (
@@ -86,7 +85,6 @@ export function PlayerScreen({
         onPlaybackProgress={onPlaybackProgress}
         onPlaybackStateChange={onPlaybackStateChange}
         onPrevious={onPrevious}
-        onSeekBy={onSeekBy}
         onTogglePlay={onTogglePlay}
         playbackSpeed={playbackSpeed}
         progress={progress}

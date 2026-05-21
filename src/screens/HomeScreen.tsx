@@ -4,7 +4,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import { EmptyState } from '../components/EmptyState';
 import { MediaRow } from '../components/MediaRow';
 import { folders } from '../data/media';
-import { styles } from '../styles';
+import { useThemeStyles } from '../theme';
 import { LibraryCard, MediaFile } from '../types';
 
 interface HomeScreenProps {
@@ -36,6 +36,8 @@ export function HomeScreen({
   totalFiles,
   videos,
 }: HomeScreenProps) {
+  const styles = useThemeStyles();
+
   return (
     <>
       <View style={styles.permissionCard}>
@@ -78,7 +80,7 @@ export function HomeScreen({
 
       <View style={styles.folderList}>
         {folders.map(folder => (
-          <TouchableOpacity key={folder.name} style={styles.folderRow}>
+          <TouchableOpacity key={folder.name} style={styles.folderRow} onPress={onOpenLibrary}>
             <View style={[styles.folderIcon, { backgroundColor: folder.color }]} />
             <View style={styles.folderCopy}>
               <Text style={styles.folderName}>{folder.name}</Text>

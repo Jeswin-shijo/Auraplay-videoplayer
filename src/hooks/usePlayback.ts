@@ -39,28 +39,6 @@ export function usePlayback({ audios, videos }: UsePlaybackOptions) {
     });
   }, [activeMedia]);
 
-  useEffect(() => {
-    if (!isPlaying || activeMedia.mediaType === 'video') return undefined;
-
-    const timer = setInterval(() => {
-      setProgress(value => {
-        const duration = value.duration || getMediaDurationSeconds(activeMedia);
-        const nextTime = value.currentTime + 0.5 * playbackSpeed;
-
-        if (nextTime >= duration) {
-          if (repeat) return { currentTime: 0, duration };
-
-          setIsPlaying(false);
-          return { currentTime: duration, duration };
-        }
-
-        return { currentTime: nextTime, duration };
-      });
-    }, 500);
-
-    return () => clearInterval(timer);
-  }, [activeMedia, isPlaying, playbackSpeed, repeat]);
-
   const featuredMeta = useMemo(() => {
     const watched =
       progress.duration > 0

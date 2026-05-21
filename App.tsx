@@ -12,12 +12,16 @@ import { usePlayback } from './src/hooks/usePlayback';
 import { FavoritesScreen } from './src/screens/FavoritesScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { PlayerScreen } from './src/screens/PlayerScreen';
-import { styles } from './src/styles';
+import { SettingsScreen } from './src/screens/SettingsScreen';
+import { ThemeProvider, useTheme, useThemeStyles } from './src/theme';
 import { ActiveTab, LibraryCard, MediaFile, MediaMode } from './src/types';
 
-export default function App() {
+function AppContent() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
   const [showLibrary, setShowLibrary] = useState(false);
+
+  const { mode } = useTheme();
+  const styles = useThemeStyles();
 
   const {
     allMedia,
@@ -31,8 +35,6 @@ export default function App() {
 
   const {
     activeMedia,
-    currentAudioIndex,
-    currentVideoIndex,
     featuredMeta,
     isPlaying,
     mediaMode,
@@ -42,7 +44,6 @@ export default function App() {
     playVideo,
     playbackSpeed,
     progress,
-    seekBy,
     setMediaMode,
     setPlaybackSpeed,
     syncPlaybackDuration,
@@ -97,23 +98,27 @@ export default function App() {
   };
 
   const saveActiveMedia = () => {
+    if (!activeMedia.id || activeMedia.id === '5') return; // ignore fallback audio
     addFavorite(activeMedia.id);
     Alert.alert('Added to favorites', `${activeMedia.name} is now in Favorite.`);
   };
 
   const handleCardPress = (card: LibraryCard) => {
+    if (card.title === 'Recent') {
+      setShowLibrary(true);
+      return;
+    }
     if (card.title === 'Favorite') {
       openTab('favorites');
       return;
     }
-
     if (card.title === 'Audio') {
       setPlayerMode('audio');
       return;
     }
-
     if (card.title === 'Video') {
       setPlayerMode('video');
+      return;
     }
   };
 
@@ -124,7 +129,6 @@ export default function App() {
 
   const playMedia = (media: MediaFile) => {
     const index = resolveMediaIndex(media);
-
     if (media.mediaType === 'audio') {
       startAudio(Math.max(0, index));
     } else {
@@ -136,7 +140,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       <AppBackground />
 
       <ScrollView
@@ -192,13 +196,19 @@ export default function App() {
             onPlaybackStateChange={syncPlayingState}
             onPrevious={playPrevious}
             onRefresh={loadPhoneMedia}
-            onSeekBy={seekBy}
             onToggleFavorite={toggleFavorite}
             onTogglePlay={togglePlay}
             playbackSpeed={playbackSpeed}
             progress={progress}
             visibleMedia={visiblePlayerMedia}
             watched={featuredMeta.watched}
+          />
+        )}
+
+        {activeTab === 'settings' && (
+          <SettingsScreen
+            permissionStatus={permissionStatus}
+            onLoadPhoneMedia={loadPhoneMedia}
           />
         )}
       </ScrollView>
@@ -216,5 +226,13 @@ export default function App() {
         visible={showLibrary}
       />
     </View>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }

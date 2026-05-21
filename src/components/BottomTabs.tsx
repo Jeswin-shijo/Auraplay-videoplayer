@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
-import { styles } from '../styles';
+import { useThemeStyles } from '../theme';
 import { ActiveTab } from '../types';
 
 interface BottomTabsProps {
@@ -11,10 +11,13 @@ interface BottomTabsProps {
 }
 
 export function BottomTabs({ activeTab, isPlaying, onTabChange }: BottomTabsProps) {
+  const styles = useThemeStyles();
+
   const tabs: Array<{ id: ActiveTab; icon: string }> = [
     { id: 'home', icon: '⌂' },
     { id: 'favorites', icon: '♡' },
     { id: 'play', icon: isPlaying ? 'II' : '▷' },
+    { id: 'settings', icon: '⚙' },
   ];
 
   return (

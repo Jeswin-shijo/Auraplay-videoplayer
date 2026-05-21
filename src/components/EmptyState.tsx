@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 
-import { styles } from '../styles';
+import { useThemeStyles } from '../theme';
 
 interface EmptyStateProps {
   title: string;
@@ -9,6 +9,8 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ title, message }: EmptyStateProps) {
+  const styles = useThemeStyles();
+
   return (
     <View style={styles.emptyState}>
       <Text style={styles.emptyTitle}>{title}</Text>

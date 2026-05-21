@@ -3,9 +3,9 @@
     "name": "AuraPlay",
     "slug": "AuraPlay",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -23,9 +23,6 @@
       "permissions": [
         "READ_MEDIA_AUDIO",
         "READ_MEDIA_VIDEO",
-        "READ_EXTERNAL_STORAGE",
-        "READ_MEDIA_AUDIO",
-        "READ_MEDIA_VIDEO",
         "READ_EXTERNAL_STORAGE"
       ],
       "adaptiveIcon": {
@@ -38,6 +35,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-audio"
+    ]
   }
 }

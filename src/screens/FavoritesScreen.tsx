@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 
 import { EmptyState } from '../components/EmptyState';
 import { MediaRow } from '../components/MediaRow';
-import { styles } from '../styles';
+import { useThemeStyles } from '../theme';
 import { MediaFile } from '../types';
 
 interface FavoritesScreenProps {
@@ -23,6 +23,8 @@ export function FavoritesScreen({
   onToggleFavorite,
   resolveMediaIndex,
 }: FavoritesScreenProps) {
+  const styles = useThemeStyles();
+
   return (
     <>
       <View style={styles.pageTitleBlock}>
@@ -40,6 +42,7 @@ export function FavoritesScreen({
             return (
               <MediaRow
                 key={item.id}
+                index={index}
                 isActive={activeMediaId === item.id}
                 isFavorite
                 item={item}

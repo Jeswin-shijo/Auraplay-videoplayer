@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
-import { styles } from '../styles';
+import { useThemeStyles } from '../theme';
 
 interface AppHeaderProps {
   onFavoritePress: () => void;
@@ -9,6 +9,8 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ onFavoritePress, onLibraryPress }: AppHeaderProps) {
+  const styles = useThemeStyles();
+
   return (
     <View style={styles.header}>
       <View style={styles.brandRow}>

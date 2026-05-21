@@ -1,8 +1,8 @@
 import React from 'react';
-import { Modal, PanResponderInstance, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, PanResponderInstance, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 import { speedOptions } from '../data/media';
-import { styles } from '../styles';
+import { useThemeStyles } from '../theme';
 import { MediaFile } from '../types';
 
 interface LibrarySheetProps {
@@ -26,6 +26,8 @@ export function LibrarySheet({
   playbackSpeed,
   visible,
 }: LibrarySheetProps) {
+  const styles = useThemeStyles();
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalOverlay}>
@@ -60,24 +62,26 @@ export function LibrarySheet({
           </View>
 
           <Text style={styles.sheetLabel}>Local Library</Text>
-          {allMedia.map((item, index) => (
-            <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.sheetVideoRow,
-                activeMediaId === item.id && styles.sheetVideoRowActive,
-              ]}
-              onPress={() => onPlayMedia(item)}>
-              <Text style={styles.sheetVideoIndex}>{index + 1}</Text>
-              <View style={styles.sheetVideoCopy}>
-                <Text style={styles.sheetVideoTitle}>{item.name}</Text>
-                <Text style={styles.sheetVideoMeta}>
-                  {item.mediaType.toUpperCase()} / {item.duration} / {item.location}
-                </Text>
-              </View>
-              {activeMediaId === item.id && <Text style={styles.sheetPlaying}>Playing</Text>}
-            </TouchableOpacity>
-          ))}
+          <ScrollView>
+            {allMedia.map((item, index) => (
+              <TouchableOpacity
+                key={item.id}
+                style={[
+                  styles.sheetVideoRow,
+                  activeMediaId === item.id && styles.sheetVideoRowActive,
+                ]}
+                onPress={() => onPlayMedia(item)}>
+                <Text style={styles.sheetVideoIndex}>{index + 1}</Text>
+                <View style={styles.sheetVideoCopy}>
+                  <Text style={styles.sheetVideoTitle}>{item.name}</Text>
+                  <Text style={styles.sheetVideoMeta}>
+                    {item.mediaType.toUpperCase()} / {item.duration} / {item.location}
+                  </Text>
+                </View>
+                {activeMediaId === item.id && <Text style={styles.sheetPlaying}>Playing</Text>}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       </View>
     </Modal>

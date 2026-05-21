@@ -1,9 +1,11 @@
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useEventListener } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import React, { useEffect, useState } from 'react';
+import Slider from '@react-native-community/slider';
+import React, { useEffect, useRef, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
-import { styles } from '../styles';
+import { useTheme, useThemeStyles } from '../theme';
 import { MediaFile, MediaMode, PlaybackProgress } from '../types';
 import { formatSeconds } from '../utils/media';
 
@@ -21,13 +23,12 @@ interface PlayerPanelProps {
   onPlaybackStateChange: (isPlaying: boolean) => void;
   onNext: () => void;
   onPrevious: () => void;
-  onSeekBy: (seconds: number) => void;
   onTogglePlay: () => void;
 }
 
 interface SeekCommand {
   id: number;
-  seconds: number;
+  position: number; // absolute seconds
 }
 
 interface VideoSurfaceProps {
@@ -49,13 +50,11 @@ function VideoSurface({
   playbackSpeed,
   seekCommand,
 }: VideoSurfaceProps) {
+  const styles = useThemeStyles();
   const player = useVideoPlayer(
     {
       uri: media.uri,
-      metadata: {
-        title: media.name,
-        artist: media.location,
-      },
+      metadata: { title: media.name, artist: media.location },
     },
     videoPlayer => {
       videoPlayer.timeUpdateEventInterval = 0.25;
@@ -77,10 +76,9 @@ function VideoSurface({
 
   useEffect(() => {
     if (seekCommand.id === 0) return;
-
-    player.seekBy(seekCommand.seconds);
-    onPlaybackProgress(player.currentTime, player.duration);
-  }, [onPlaybackProgress, player, seekCommand]);
+    // Use delta from the player's live currentTime for accurate absolute seek
+    player.seekBy(seekCommand.position - player.currentTime);
+  }, [player, seekCommand]);
 
   useEventListener(player, 'timeUpdate', ({ currentTime }) => {
     onPlaybackProgress(currentTime, player.duration);
@@ -103,11 +101,69 @@ function VideoSurface({
     <VideoView
       style={styles.videoSurface}
       player={player}
-      contentFit="cover"
-      nativeControls={false}
-      fullscreenOptions={{ enable: true }}
+      contentFit="contain"
+      nativeControls
+      fullscreenOptions={{ enable: true, orientation: 'landscape' }}
     />
   );
+}
+
+interface AudioSurfaceProps {
+  media: MediaFile;
+  isPlaying: boolean;
+  playbackSpeed: number;
+  seekCommand: SeekCommand;
+  onPlaybackDuration: (duration: number) => void;
+  onPlaybackProgress: (currentTime: number, duration?: number) => void;
+  onPlaybackStateChange: (isPlaying: boolean) => void;
+}
+
+function AudioSurface({
+  isPlaying,
+  media,
+  onPlaybackDuration,
+  onPlaybackProgress,
+  onPlaybackStateChange,
+  playbackSpeed,
+  seekCommand,
+}: AudioSurfaceProps) {
+  const player = useAudioPlayer({ uri: media.uri });
+  const status = useAudioPlayerStatus(player);
+
+  useEffect(() => {
+    setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (isPlaying) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [isPlaying, player]);
+
+  useEffect(() => {
+    player.setPlaybackRate(playbackSpeed);
+  }, [playbackSpeed, player]);
+
+  useEffect(() => {
+    if (seekCommand.id === 0) return;
+    player.seekTo(seekCommand.position);
+  }, [player, seekCommand]);
+
+  useEffect(() => {
+    if (!status.isLoaded) return;
+    onPlaybackProgress(status.currentTime, status.duration ?? 0);
+    if (status.duration && !isNaN(status.duration)) {
+      onPlaybackDuration(status.duration);
+    }
+  }, [status.currentTime, status.isLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    onPlaybackStateChange(status.playing);
+  }, [status.playing]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return null;
 }
 
 export function PlayerPanel({
@@ -121,28 +177,43 @@ export function PlayerPanel({
   onPlaybackStateChange,
   onNext,
   onPrevious,
-  onSeekBy,
   onTogglePlay,
   playbackSpeed,
   progress,
   watched,
 }: PlayerPanelProps) {
+  const styles = useThemeStyles();
+  const { colors } = useTheme();
   const isVideo = mediaMode === 'video' && activeMedia.mediaType === 'video';
-  const [seekCommand, setSeekCommand] = useState<SeekCommand>({ id: 0, seconds: 0 });
+  const [seekCommand, setSeekCommand] = useState<SeekCommand>({ id: 0, position: 0 });
+  const [sliderValue, setSliderValue] = useState(progress.currentTime);
+  const isSlidingRef = useRef(false);
 
-  const handleSeekBy = (seconds: number) => {
-    if (isVideo) {
-      setSeekCommand(command => ({ id: command.id + 1, seconds }));
-      return;
+  useEffect(() => {
+    if (!isSlidingRef.current) {
+      setSliderValue(progress.currentTime);
     }
+  }, [progress.currentTime]);
 
-    onSeekBy(seconds);
+  const issueSeek = (absolutePosition: number) => {
+    setSeekCommand(cmd => ({ id: cmd.id + 1, position: absolutePosition }));
+  };
+
+  const handleSeekBy = (deltaSeconds: number) => {
+    const duration = progress.duration || 999;
+    const newPosition = Math.max(0, Math.min(duration, progress.currentTime + deltaSeconds));
+    issueSeek(newPosition);
   };
 
   return (
     <View style={styles.heroShell}>
       <View style={styles.notch} />
-      <View style={[styles.heroArt, mediaMode === 'audio' && styles.audioArt]}>
+      <View
+        style={[
+          styles.heroArt,
+          isVideo && styles.videoArt,
+          mediaMode === 'audio' && styles.audioArt,
+        ]}>
         {isVideo ? (
           <VideoSurface
             key={activeMedia.id}
@@ -156,6 +227,16 @@ export function PlayerPanel({
           />
         ) : (
           <>
+            <AudioSurface
+              key={activeMedia.id}
+              isPlaying={isPlaying}
+              media={activeMedia}
+              onPlaybackDuration={onPlaybackDuration}
+              onPlaybackProgress={onPlaybackProgress}
+              onPlaybackStateChange={onPlaybackStateChange}
+              playbackSpeed={playbackSpeed}
+              seekCommand={seekCommand}
+            />
             <View style={[styles.ray, styles.rayOne]} />
             <View style={[styles.ray, styles.rayTwo]} />
             <View style={[styles.ray, styles.rayThree]} />
@@ -168,9 +249,11 @@ export function PlayerPanel({
             </View>
           </>
         )}
-        <TouchableOpacity style={styles.playOrb} onPress={onTogglePlay}>
-          <Text style={styles.playOrbText}>{isPlaying ? 'II' : '▶'}</Text>
-        </TouchableOpacity>
+        {!isVideo && (
+          <TouchableOpacity style={styles.playOrb} onPress={onTogglePlay}>
+            <Text style={styles.playOrbText}>{isPlaying ? 'II' : '▶'}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.heroInfo}>
@@ -185,9 +268,23 @@ export function PlayerPanel({
 
         <View style={styles.timeline}>
           <Text style={styles.timeText}>{formatSeconds(progress.currentTime)}</Text>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${watched}%` }]} />
-          </View>
+          <Slider
+            style={styles.progressSlider}
+            value={sliderValue}
+            minimumValue={0}
+            maximumValue={progress.duration || 1}
+            onValueChange={value => {
+              isSlidingRef.current = true;
+              setSliderValue(value);
+            }}
+            onSlidingComplete={value => {
+              isSlidingRef.current = false;
+              issueSeek(value);
+            }}
+            minimumTrackTintColor={colors.accent}
+            maximumTrackTintColor={colors.progressTrack}
+            thumbTintColor={colors.accent}
+          />
           <Text style={styles.timeText}>
             {progress.duration ? formatSeconds(progress.duration) : activeMedia.duration}
           </Text>

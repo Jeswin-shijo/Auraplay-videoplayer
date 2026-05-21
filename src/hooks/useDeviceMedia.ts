@@ -1,9 +1,18 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as MediaLibrary from 'expo-media-library';
 
 import { fallbackMedia } from '../data/media';
 import { MediaFile } from '../types';
 import { mapAssetToFile } from '../utils/media';
+
+const mapAssetWithInfo = async (asset: MediaLibrary.Asset) => {
+  try {
+    const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+    return mapAssetToFile(assetInfo);
+  } catch {
+    return mapAssetToFile(asset);
+  }
+};
 
 export function useDeviceMedia() {
   const [deviceMedia, setDeviceMedia] = useState<MediaFile[]>([]);
@@ -49,7 +58,9 @@ export function useDeviceMedia() {
         }),
       ]);
 
-      const phoneMedia = [...videoAssets.assets, ...audioAssets.assets].map(mapAssetToFile);
+      const phoneMedia = await Promise.all(
+        [...videoAssets.assets, ...audioAssets.assets].map(mapAssetWithInfo)
+      );
       setDeviceMedia(phoneMedia);
 
       if (phoneMedia.length === 0) {
@@ -67,9 +78,20 @@ export function useDeviceMedia() {
     loadPhoneMedia();
   }, [loadPhoneMedia]);
 
-  const allMedia = deviceMedia.length > 0 ? deviceMedia : fallbackMedia;
-  const videos = allMedia.filter(item => item.mediaType === 'video');
-  const audios = allMedia.filter(item => item.mediaType === 'audio');
+  const allMedia = useMemo(
+    () => (deviceMedia.length > 0 || permissionStatus === 'granted' ? deviceMedia : fallbackMedia),
+    [deviceMedia, permissionStatus]
+  );
+
+  const videos = useMemo(
+    () => allMedia.filter(item => item.mediaType === 'video'),
+    [allMedia]
+  );
+
+  const audios = useMemo(
+    () => allMedia.filter(item => item.mediaType === 'audio'),
+    [allMedia]
+  );
 
   return {
     allMedia,

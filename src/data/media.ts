@@ -44,11 +44,11 @@ export const fallbackMedia: MediaFile[] = [
   {
     id: '5',
     name: 'Aura Demo Audio',
-    uri: 'sample-audio',
+    uri: 'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
     location: 'Sample audio',
-    duration: '03:24',
-    durationSeconds: 204,
-    size: '8 MB',
+    duration: '00:25',
+    durationSeconds: 25,
+    size: '0.4 MB',
     mediaType: 'audio',
   },
 ];

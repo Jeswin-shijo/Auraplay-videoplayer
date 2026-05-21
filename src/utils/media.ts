@@ -23,10 +23,10 @@ const formatAssetSize = (asset: MediaLibrary.Asset) => {
 export const getMediaDurationSeconds = (media: MediaFile) =>
   media.durationSeconds || parseDuration(media.duration);
 
-export const mapAssetToFile = (asset: MediaLibrary.Asset): MediaFile => ({
+export const mapAssetToFile = (asset: MediaLibrary.AssetInfo | MediaLibrary.Asset): MediaFile => ({
   id: asset.id,
   name: asset.filename || `${asset.mediaType} file`,
-  uri: asset.uri,
+  uri: 'localUri' in asset && asset.localUri ? asset.localUri : asset.uri,
   location: asset.mediaType === 'audio' ? 'Phone audio' : 'Camera roll',
   duration: formatSeconds(asset.duration),
   durationSeconds: asset.duration || 0,
