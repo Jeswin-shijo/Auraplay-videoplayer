@@ -46,7 +46,7 @@ export function createStyles(c: ThemeColors) {
     content: {
       paddingTop: 58,
       paddingHorizontal: 18,
-      paddingBottom: 118,
+      paddingBottom: 136,
     },
     header: {
       alignItems: 'center',
@@ -622,7 +622,7 @@ export function createStyles(c: ThemeColors) {
       borderColor: c.navBorder,
       borderRadius: 28,
       borderWidth: 1,
-      bottom: 0,
+      bottom: 14,
       flexDirection: 'row',
       height: 64,
       justifyContent: 'center',
@@ -651,6 +651,14 @@ export function createStyles(c: ThemeColors) {
     navIconActive: {
       color: '#ffffff',
       fontWeight: '900',
+    },
+    fullscreenVideoLauncher: {
+      bottom: 0,
+      height: 1,
+      opacity: 0.01,
+      position: 'absolute',
+      right: 0,
+      width: 1,
     },
     modalOverlay: {
       backgroundColor: 'rgba(0,0,0,0.62)',
@@ -824,6 +832,8 @@ export function createStyles(c: ThemeColors) {
     themePill: {
       alignItems: 'center',
       borderRadius: 17,
+      flexDirection: 'row',
+      gap: 5,
       paddingHorizontal: 18,
       paddingVertical: 7,
     },

@@ -1,8 +1,11 @@
 import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useTheme, useThemeStyles } from '../theme';
 import { ThemeMode } from '../types';
+
+type ThemeIconName = keyof typeof Ionicons.glyphMap;
 
 interface SettingsScreenProps {
   permissionStatus: string;
@@ -11,11 +14,11 @@ interface SettingsScreenProps {
 
 export function SettingsScreen({ permissionStatus, onLoadPhoneMedia }: SettingsScreenProps) {
   const styles = useThemeStyles();
-  const { mode, setMode } = useTheme();
+  const { colors, mode, setMode } = useTheme();
 
-  const themes: Array<{ id: ThemeMode; label: string }> = [
-    { id: 'dark', label: 'Dark' },
-    { id: 'light', label: 'Light' },
+  const themes: Array<{ id: ThemeMode; label: string; icon: ThemeIconName }> = [
+    { id: 'dark', label: 'Dark', icon: 'moon' },
+    { id: 'light', label: 'Light', icon: 'sunny' },
   ];
 
   const permissionLabel =
@@ -42,6 +45,11 @@ export function SettingsScreen({ permissionStatus, onLoadPhoneMedia }: SettingsS
                 key={t.id}
                 style={[styles.themePill, mode === t.id && styles.themePillActive]}
                 onPress={() => setMode(t.id)}>
+                <Ionicons
+                  name={t.icon}
+                  size={14}
+                  color={mode === t.id ? '#ffffff' : colors.textMuted}
+                />
                 <Text
                   style={[styles.themePillText, mode === t.id && styles.themePillTextActive]}>
                   {t.label}

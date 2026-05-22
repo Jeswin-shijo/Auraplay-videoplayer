@@ -1,8 +1,11 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-import { useThemeStyles } from '../theme';
+import { useTheme, useThemeStyles } from '../theme';
 import { ActiveTab } from '../types';
+
+type TabIconName = keyof typeof Ionicons.glyphMap;
 
 interface BottomTabsProps {
   activeTab: ActiveTab;
@@ -11,13 +14,14 @@ interface BottomTabsProps {
 }
 
 export function BottomTabs({ activeTab, isPlaying, onTabChange }: BottomTabsProps) {
+  const { colors } = useTheme();
   const styles = useThemeStyles();
 
-  const tabs: Array<{ id: ActiveTab; icon: string }> = [
-    { id: 'home', icon: '⌂' },
-    { id: 'favorites', icon: '♡' },
-    { id: 'play', icon: isPlaying ? 'II' : '▷' },
-    { id: 'settings', icon: '⚙' },
+  const tabs: Array<{ id: ActiveTab; icon: TabIconName }> = [
+    { id: 'home', icon: 'home' },
+    { id: 'favorites', icon: 'heart' },
+    { id: 'play', icon: isPlaying ? 'pause' : 'play' },
+    { id: 'settings', icon: 'settings' },
   ];
 
   return (
@@ -30,9 +34,11 @@ export function BottomTabs({ activeTab, isPlaying, onTabChange }: BottomTabsProp
             key={tab.id}
             style={[styles.navButton, isActive && styles.navButtonActive]}
             onPress={() => onTabChange(tab.id)}>
-            <Text style={[styles.navIcon, isActive && styles.navIconActive]}>
-              {tab.icon}
-            </Text>
+            <Ionicons
+              name={tab.icon}
+              size={23}
+              color={isActive ? '#ffffff' : colors.textSub}
+            />
           </TouchableOpacity>
         );
       })}

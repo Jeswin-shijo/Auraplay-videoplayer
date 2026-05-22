@@ -1,11 +1,14 @@
-import React, { useMemo, useState } from 'react';
-import { Alert, PanResponder, ScrollView, View } from 'react-native';
+import React, { useMemo, useState, useRef } from 'react';
+import { Alert, ScrollView, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { StatusBar } from 'expo-status-bar';
 
 import { AppBackground } from './src/components/AppBackground';
 import { AppHeader } from './src/components/AppHeader';
 import { BottomTabs } from './src/components/BottomTabs';
-import { LibrarySheet } from './src/components/LibrarySheet';
+import { FullscreenVideoPlayer } from './src/components/FullscreenVideoPlayer';
+import { LibrarySheetRef } from './src/components/LibrarySheet';
 import { useDeviceMedia } from './src/hooks/useDeviceMedia';
 import { useFavorites } from './src/hooks/useFavorites';
 import { usePlayback } from './src/hooks/usePlayback';
@@ -18,7 +21,8 @@ import { ActiveTab, LibraryCard, MediaFile, MediaMode } from './src/types';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('home');
-  const [showLibrary, setShowLibrary] = useState(false);
+  const [fullscreenVideoRequest, setFullscreenVideoRequest] = useState(0);
+  const librarySheetRef = useRef<any>(null);
 
   const { mode } = useTheme();
   const styles = useThemeStyles();
@@ -65,26 +69,16 @@ function AppContent() {
     [allMedia.length, audios.length, favoriteMedia.length, videos.length]
   );
 
-  const sheetPanResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gesture) =>
-          Math.abs(gesture.dy) > 8 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
-        onPanResponderRelease: (_, gesture) => {
-          if (gesture.dy > 60) setShowLibrary(false);
-        },
-      }),
-    []
-  );
-
   const openTab = (tab: ActiveTab) => {
     setActiveTab(tab);
-    setShowLibrary(false);
+    librarySheetRef.current?.dismiss();
   };
 
   const startVideo = (index: number) => {
+    if (!videos[index]) return;
     playVideo(index);
-    openTab('play');
+    librarySheetRef.current?.dismiss();
+    setFullscreenVideoRequest(request => request + 1);
   };
 
   const startAudio = (index: number) => {
@@ -105,7 +99,7 @@ function AppContent() {
 
   const handleCardPress = (card: LibraryCard) => {
     if (card.title === 'Recent') {
-      setShowLibrary(true);
+      librarySheetRef.current?.present();
       return;
     }
     if (card.title === 'Favorite') {
@@ -149,7 +143,7 @@ function AppContent() {
         showsVerticalScrollIndicator={false}>
         <AppHeader
           onFavoritePress={saveActiveMedia}
-          onLibraryPress={() => setShowLibrary(true)}
+          onLibraryPress={() => librarySheetRef.current?.present()}
         />
 
         {activeTab === 'home' && (
@@ -160,7 +154,7 @@ function AppContent() {
             mediaError={mediaError}
             onCardPress={handleCardPress}
             onLoadPhoneMedia={loadPhoneMedia}
-            onOpenLibrary={() => setShowLibrary(true)}
+            onOpenLibrary={() => librarySheetRef.current?.present()}
             onPlayVideo={startVideo}
             onToggleFavorite={toggleFavorite}
             permissionStatus={permissionStatus}
@@ -215,15 +209,26 @@ function AppContent() {
 
       <BottomTabs activeTab={activeTab} isPlaying={isPlaying} onTabChange={openTab} />
 
-      <LibrarySheet
+      {fullscreenVideoRequest > 0 && activeMedia.mediaType === 'video' && (
+        <FullscreenVideoPlayer
+          key={activeMedia.id}
+          isPlaying={isPlaying}
+          media={activeMedia}
+          onPlaybackDuration={syncPlaybackDuration}
+          onPlaybackProgress={syncPlaybackProgress}
+          onPlaybackStateChange={syncPlayingState}
+          playbackSpeed={playbackSpeed}
+          requestId={fullscreenVideoRequest}
+        />
+      )}
+
+      <LibrarySheetRef
+        ref={librarySheetRef}
         activeMediaId={activeMedia.id}
         allMedia={allMedia}
-        onClose={() => setShowLibrary(false)}
         onPlayMedia={playMedia}
         onSpeedChange={setPlaybackSpeed}
-        panResponder={sheetPanResponder}
         playbackSpeed={playbackSpeed}
-        visible={showLibrary}
       />
     </View>
   );
@@ -231,8 +236,12 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <BottomSheetModalProvider>
+          <AppContent />
+        </BottomSheetModalProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
