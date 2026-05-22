@@ -207,7 +207,6 @@ export function PlayerPanel({
 
   return (
     <View style={styles.heroShell}>
-      <View style={styles.notch} />
       <View
         style={[
           styles.heroArt,
@@ -237,15 +236,11 @@ export function PlayerPanel({
               playbackSpeed={playbackSpeed}
               seekCommand={seekCommand}
             />
-            <View style={[styles.ray, styles.rayOne]} />
-            <View style={[styles.ray, styles.rayTwo]} />
-            <View style={[styles.ray, styles.rayThree]} />
-            <View style={styles.videoPreview}>
-              <View style={styles.previewHorizon} />
-              <View style={styles.previewBuildingTall} />
-              <View style={styles.previewBuildingShort} />
-              <View style={styles.previewRoad} />
-              <Text style={styles.previewLabel}>{activeMedia.location}</Text>
+            <View style={styles.audioPlaceholder}>
+              <Text style={styles.audioPlaceholderIcon}>♪</Text>
+              <Text style={styles.audioPlaceholderText} numberOfLines={2}>
+                {activeMedia.location}
+              </Text>
             </View>
           </>
         )}
@@ -257,14 +252,12 @@ export function PlayerPanel({
       </View>
 
       <View style={styles.heroInfo}>
-        <View style={styles.pager}>
-          <View style={styles.pagerDot} />
-          <View style={[styles.pagerDot, styles.pagerDotActive]} />
-        </View>
-        <Text style={[styles.heroTitle, isCompact && styles.heroTitleCompact]}>
-          {mediaMode === 'video' ? 'VIDEO THAT\nPLAY ALL' : 'AUDIO THAT\nPLAY ALL'}
+        <Text style={[styles.heroTitle, isCompact && styles.heroTitleCompact]} numberOfLines={1}>
+          {featuredTitle}
         </Text>
-        <Text style={styles.heroSubtitle}>{featuredTitle}</Text>
+        <Text style={styles.heroSubtitle} numberOfLines={1}>
+          {mediaMode === 'video' ? 'VIDEO' : 'AUDIO'} · {activeMedia.location}
+        </Text>
 
         <View style={styles.timeline}>
           <Text style={styles.timeText}>{formatSeconds(progress.currentTime)}</Text>
