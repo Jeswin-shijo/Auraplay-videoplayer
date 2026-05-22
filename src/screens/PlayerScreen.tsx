@@ -57,41 +57,39 @@ export function PlayerScreen({
 
   return (
     <>
-      {mediaMode === 'audio' && (
-        <>
-          <View style={styles.modeSwitch}>
-            <TouchableOpacity
-              style={styles.modeButton}
-              onPress={() => onModeChange('video')}>
-              <Text style={styles.modeText}>Video Player</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modeButton, styles.modeButtonActive]}
-              onPress={() => onModeChange('audio')}>
-              <Text style={[styles.modeText, styles.modeTextActive]}>
-                Audio Player
-              </Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.modeSwitch}>
+        <TouchableOpacity
+          style={[styles.modeButton, mediaMode === 'video' && styles.modeButtonActive]}
+          onPress={() => onModeChange('video')}>
+          <Text style={[styles.modeText, mediaMode === 'video' && styles.modeTextActive]}>
+            Video Player
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.modeButton, mediaMode === 'audio' && styles.modeButtonActive]}
+          onPress={() => onModeChange('audio')}>
+          <Text style={[styles.modeText, mediaMode === 'audio' && styles.modeTextActive]}>
+            Audio Player
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-          <PlayerPanel
-            activeMedia={activeMedia}
-            featuredTitle={featuredTitle}
-            isCompact={isCompact}
-            isPlaying={isPlaying}
-            mediaMode={mediaMode}
-            onNext={onNext}
-            onPlaybackDuration={onPlaybackDuration}
-            onPlaybackProgress={onPlaybackProgress}
-            onPlaybackStateChange={onPlaybackStateChange}
-            onPrevious={onPrevious}
-            onTogglePlay={onTogglePlay}
-            playbackSpeed={playbackSpeed}
-            progress={progress}
-            watched={watched}
-          />
-        </>
-      )}
+      <PlayerPanel
+        activeMedia={activeMedia}
+        featuredTitle={featuredTitle}
+        isCompact={isCompact}
+        isPlaying={isPlaying}
+        mediaMode={mediaMode}
+        onNext={onNext}
+        onPlaybackDuration={onPlaybackDuration}
+        onPlaybackProgress={onPlaybackProgress}
+        onPlaybackStateChange={onPlaybackStateChange}
+        onPrevious={onPrevious}
+        onTogglePlay={onTogglePlay}
+        playbackSpeed={playbackSpeed}
+        progress={progress}
+        watched={watched}
+      />
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>

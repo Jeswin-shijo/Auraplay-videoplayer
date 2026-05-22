@@ -217,6 +217,10 @@ function AppContent() {
           onPlaybackDuration={syncPlaybackDuration}
           onPlaybackProgress={syncPlaybackProgress}
           onPlaybackStateChange={syncPlayingState}
+          onFullscreenExit={() => {
+            setFullscreenVideoRequest(0);
+            openTab('play');
+          }}
           playbackSpeed={playbackSpeed}
           requestId={fullscreenVideoRequest}
         />

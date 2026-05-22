@@ -16,14 +16,17 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "AuraPlay needs access to your media library to show and play videos from this phone.",
-        "NSAppleMusicUsageDescription": "AuraPlay needs access to your audio library to show music and audio files from this phone."
+        "NSAppleMusicUsageDescription": "AuraPlay needs access to your audio library to show music and audio files from this phone.",
+        "UIBackgroundModes": ["audio"]
       }
     },
     "android": {
       "permissions": [
         "READ_MEDIA_AUDIO",
         "READ_MEDIA_VIDEO",
-        "READ_EXTERNAL_STORAGE"
+        "READ_EXTERNAL_STORAGE",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

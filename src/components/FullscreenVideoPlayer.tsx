@@ -1,6 +1,7 @@
 import { useEventListener } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 
 import { useThemeStyles } from '../theme';
 import { MediaFile } from '../types';
@@ -13,6 +14,7 @@ interface FullscreenVideoPlayerProps {
   onPlaybackDuration: (duration: number) => void;
   onPlaybackProgress: (currentTime: number, duration?: number) => void;
   onPlaybackStateChange: (isPlaying: boolean) => void;
+  onFullscreenExit?: () => void;
 }
 
 export function FullscreenVideoPlayer({
@@ -21,6 +23,7 @@ export function FullscreenVideoPlayer({
   onPlaybackDuration,
   onPlaybackProgress,
   onPlaybackStateChange,
+  onFullscreenExit,
   playbackSpeed,
   requestId,
 }: FullscreenVideoPlayerProps) {
@@ -35,6 +38,7 @@ export function FullscreenVideoPlayer({
     videoPlayer => {
       videoPlayer.timeUpdateEventInterval = 0.25;
       videoPlayer.playbackRate = playbackSpeed;
+      videoPlayer.staysActiveInBackground = false;
     }
   );
 
@@ -49,6 +53,14 @@ export function FullscreenVideoPlayer({
       player.pause();
     }
   }, [isPlaying, player]);
+
+  // Pause video when app moves to background
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', state => {
+      if (state !== 'active') player.pause();
+    });
+    return () => sub.remove();
+  }, [player]);
 
   useEffect(() => {
     if (requestId === 0) return;
@@ -86,6 +98,7 @@ export function FullscreenVideoPlayer({
       contentFit="contain"
       nativeControls
       fullscreenOptions={{ enable: true, orientation: 'landscape' }}
+      onFullscreenExit={onFullscreenExit}
     />
   );
 }

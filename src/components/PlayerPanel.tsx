@@ -3,7 +3,7 @@ import { useEventListener } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import Slider from '@react-native-community/slider';
 import React, { useEffect, useRef, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { AppState, Text, TouchableOpacity, View } from 'react-native';
 
 import { useTheme, useThemeStyles } from '../theme';
 import { MediaFile, MediaMode, PlaybackProgress } from '../types';
@@ -59,6 +59,7 @@ function VideoSurface({
     videoPlayer => {
       videoPlayer.timeUpdateEventInterval = 0.25;
       videoPlayer.playbackRate = playbackSpeed;
+      videoPlayer.staysActiveInBackground = false;
     }
   );
 
@@ -73,6 +74,14 @@ function VideoSurface({
       player.pause();
     }
   }, [isPlaying, player]);
+
+  // Pause video when app moves to background
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', state => {
+      if (state !== 'active') player.pause();
+    });
+    return () => sub.remove();
+  }, [player]);
 
   useEffect(() => {
     if (seekCommand.id === 0) return;
@@ -129,9 +138,16 @@ function AudioSurface({
 }: AudioSurfaceProps) {
   const player = useAudioPlayer({ uri: media.uri });
   const status = useAudioPlayerStatus(player);
+  // Prevent seek-induced pause events from propagating to the parent and
+  // pausing the player. expo-audio briefly reports playing=false during seekTo.
+  const isSeekingRef = useRef(false);
+  const seekSettleRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
-    setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -148,7 +164,15 @@ function AudioSurface({
 
   useEffect(() => {
     if (seekCommand.id === 0) return;
+    isSeekingRef.current = true;
+    clearTimeout(seekSettleRef.current);
     player.seekTo(seekCommand.position);
+    // Keep the seeking flag raised long enough for the transient playing=false
+    // event from expo-audio to fire and be ignored before we lower it.
+    seekSettleRef.current = setTimeout(() => {
+      isSeekingRef.current = false;
+    }, 500);
+    return () => clearTimeout(seekSettleRef.current);
   }, [player, seekCommand]);
 
   useEffect(() => {
@@ -160,6 +184,8 @@ function AudioSurface({
   }, [status.currentTime, status.isLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    // Skip transient false events emitted during seek operations
+    if (isSeekingRef.current) return;
     onPlaybackStateChange(status.playing);
   }, [status.playing]); // eslint-disable-line react-hooks/exhaustive-deps
 
